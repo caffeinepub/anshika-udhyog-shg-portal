@@ -113,6 +113,7 @@ export interface HomepageSlide {
   title: string;
   subtitle: string;
   bg: string;
+  imageUrl?: string;
 }
 
 export interface HomepageStat {
@@ -129,6 +130,8 @@ export interface HomepageContent {
   phone: string;
   email: string;
   address: string;
+  logoUrl?: string;
+  siteTitle?: string;
 }
 
 export interface GalleryItem {
@@ -137,6 +140,85 @@ export interface GalleryItem {
   date: string;
   type: "photo" | "video";
   src: string;
+}
+
+export interface TickerItem {
+  id: string;
+  message: string;
+  active: boolean;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  imageUrl: string;
+  stock: number;
+  active: boolean;
+}
+
+export interface Vacancy {
+  id: string;
+  title: string;
+  description: string;
+  qualification: string;
+  salary: string;
+  lastDate: string;
+  location: string;
+  active: boolean;
+}
+
+export interface PageContent {
+  id: string;
+  page: string;
+  content: string;
+  updatedAt: string;
+}
+
+export interface SiteSettings {
+  fontFamily: string;
+  fontSize: string;
+  logoUrl: string;
+  siteTitle: string;
+}
+
+export interface Member {
+  id: string;
+  name: string;
+  photo: string;
+  location: string;
+  designation: string;
+  idNumber: string;
+  active: boolean;
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  photo: string;
+  designation: string;
+  shortMessage: string;
+  active: boolean;
+}
+
+export interface TeamReview {
+  id: string;
+  memberName: string;
+  photo: string;
+  rating: number;
+  message: string;
+  active: boolean;
+}
+
+export interface Award {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  year: string;
+  active: boolean;
 }
 
 export interface AppState {
@@ -151,4 +233,13 @@ export interface AppState {
   mlmLevels: MLMLevel[];
   homepageContent: HomepageContent;
   galleryItems: GalleryItem[];
+  tickers: TickerItem[];
+  products: Product[];
+  vacancies: Vacancy[];
+  pageContents: PageContent[];
+  siteSettings: SiteSettings;
+  members: Member[];
+  teamMembers: TeamMember[];
+  teamReviews: TeamReview[];
+  awards: Award[];
 }

@@ -20,31 +20,37 @@ const SERVICES = [
     icon: CreditCard,
     title: "Loan Services",
     desc: "Easy loans for SHG members with flexible repayment",
+    page: "shg_program",
   },
   {
     icon: BookOpen,
     title: "Training Programs",
     desc: "Skill development and vocational training",
+    page: "training_pub",
   },
   {
     icon: Award,
     title: "Rewards & Recognition",
     desc: "Monthly awards and lucky draw for active members",
+    page: "rewards_pub",
   },
   {
     icon: Wallet,
     title: "Wallet Management",
     desc: "Digital wallet for cashless transactions",
+    page: "login",
   },
   {
     icon: TrendingUp,
     title: "Multi-Level Income",
     desc: "Earn through multi-level referral income plan",
+    page: "cottage",
   },
   {
     icon: Users,
     title: "Digital ID Card",
     desc: "Official digital ID card for all SHG members",
+    page: "signup",
   },
 ];
 
@@ -81,7 +87,6 @@ function StatItem({
   const [started, setStarted] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const display = useCountUp(value, started);
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -92,7 +97,6 @@ function StatItem({
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, []);
-
   return (
     <div ref={ref} className="flex flex-col items-center min-w-[80px]">
       <span className="text-2xl pulse-icon">{icon}</span>
@@ -104,15 +108,32 @@ function StatItem({
   );
 }
 
+const AVATAR_COLORS = [
+  "#FFC107",
+  "#1565c0",
+  "#2e7d32",
+  "#6a1b9a",
+  "#c62828",
+  "#00695c",
+];
+
 export function HomePage() {
   const { setCurrentPage, state } = useApp();
-  const { homepageContent, galleryItems } = state;
+  const {
+    homepageContent,
+    galleryItems,
+    members,
+    teamMembers,
+    teamReviews,
+    awards,
+  } = state;
   const { slides, stats, aboutText, tagline, phone, email, address } =
     homepageContent;
 
   const [slide, setSlide] = useState(0);
   const [prevSlide, setPrevSlide] = useState<number | null>(null);
   const [transitioning, setTransitioning] = useState(false);
+  const [memberSlide, setMemberSlide] = useState(0);
 
   const goToSlide = (next: number) => {
     if (transitioning || next === slide) return;
@@ -130,16 +151,28 @@ export function HomePage() {
     return () => clearInterval(t);
   });
 
+  const activeMembers = members.filter((m) => m.active);
+  useEffect(() => {
+    if (activeMembers.length <= 1) return;
+    const t = setInterval(
+      () => setMemberSlide((s) => (s + 1) % activeMembers.length),
+      3000,
+    );
+    return () => clearInterval(t);
+  }, [activeMembers.length]);
+
+  const activeTeam = teamMembers.filter((m) => m.active);
+  const activeReviews = teamReviews.filter((r) => r.active);
+  const activeAwards = awards.filter((a) => a.active);
   const previewItems = galleryItems.slice(0, 4);
 
   return (
     <div className="max-w-lg mx-auto">
       {/* Hero Slider */}
       <div className="relative overflow-hidden" style={{ height: 230 }}>
-        {/* Previous slide fading out */}
         {prevSlide !== null && (
           <div
-            className="absolute inset-0 flex items-center justify-center flex-col text-center px-6"
+            className="absolute inset-0"
             style={{
               background: slides[prevSlide].bg,
               opacity: transitioning ? 0 : 1,
@@ -147,20 +180,27 @@ export function HomePage() {
             }}
           />
         )}
-        {/* Current slide */}
         <div
           className="absolute inset-0 flex items-center justify-center flex-col text-center px-6"
           style={{
-            background: slides[slide].bg,
+            background: slides[slide].imageUrl
+              ? `url(${slides[slide].imageUrl}) center/cover`
+              : slides[slide].bg,
             opacity: transitioning ? 0 : 1,
             transition: "opacity 0.5s ease",
           }}
         >
           <div className="mb-2 animate-fade-in-up">
             <img
-              src="/assets/img-20260315-wa0038-019d4aae-fcb3-75aa-abdd-0170412930a9.jpg"
+              src={
+                homepageContent.logoUrl ||
+                "/assets/img-20260315-wa0038-019d4aae-fcb3-75aa-abdd-0170412930a9.jpg"
+              }
               alt="Logo"
               className="h-16 w-16 rounded-full object-cover border-4 border-white shadow-lg mx-auto"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
             />
           </div>
           <h1
@@ -184,18 +224,13 @@ export function HomePage() {
             {tagline}
           </p>
         </div>
-        {/* Dot indicators */}
         <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
           {slides.map((s, i) => (
             <button
               type="button"
               key={s.title}
               onClick={() => goToSlide(i)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                i === slide
-                  ? "bg-white scale-125"
-                  : "bg-white/50 hover:bg-white/80"
-              }`}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${i === slide ? "bg-white scale-125" : "bg-white/50 hover:bg-white/80"}`}
               aria-label={`Slide ${i + 1}`}
             />
           ))}
@@ -215,6 +250,81 @@ export function HomePage() {
           ))}
         </div>
       </div>
+
+      {/* Members Slider */}
+      {activeMembers.length > 0 && (
+        <div
+          className="px-4 py-5 animate-fade-in-up"
+          style={{ animationDelay: "0.05s" }}
+        >
+          <h2 className="font-heading font-bold text-base text-gray-900 mb-3">
+            👥 Our Members
+          </h2>
+          <div className="relative overflow-hidden">
+            <div
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${memberSlide * 100}%)` }}
+            >
+              {activeMembers.map((mem, idx) => (
+                <div key={mem.id} className="min-w-full flex justify-center">
+                  <div
+                    className="flex flex-col items-center gap-2 bg-white rounded-2xl shadow-md p-4 w-48 border-2"
+                    style={{ borderColor: "#FFC107" }}
+                  >
+                    {mem.photo ? (
+                      <img
+                        src={mem.photo}
+                        alt={mem.name}
+                        className="h-16 w-16 rounded-full object-cover border-4 border-amber-300"
+                      />
+                    ) : (
+                      <div
+                        className="h-16 w-16 rounded-full flex items-center justify-center text-white text-2xl font-bold border-4 border-amber-300"
+                        style={{
+                          background: AVATAR_COLORS[idx % AVATAR_COLORS.length],
+                        }}
+                      >
+                        {mem.name.charAt(0)}
+                      </div>
+                    )}
+                    <div className="text-center">
+                      <p className="font-bold text-sm text-gray-900">
+                        {mem.name}
+                      </p>
+                      <p
+                        className="text-xs font-semibold"
+                        style={{ color: "#FFC107" }}
+                      >
+                        {mem.designation}
+                      </p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">
+                        📍 {mem.location}
+                      </p>
+                      <p className="text-[10px] text-gray-400 mt-0.5 font-mono">
+                        ID: {mem.idNumber}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-center gap-1.5 mt-3">
+              {activeMembers.map((mem, i) => (
+                <button
+                  type="button"
+                  key={mem.id}
+                  onClick={() => setMemberSlide(i)}
+                  className={`w-2 h-2 rounded-full transition-all ${i === memberSlide ? "scale-125" : "bg-gray-300"}`}
+                  style={{
+                    background: i === memberSlide ? "#FFC107" : undefined,
+                  }}
+                  aria-label={`Member ${i + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* About Section */}
       <div
@@ -255,6 +365,7 @@ export function HomePage() {
               <Card
                 key={svc.title}
                 className="overflow-hidden cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                onClick={() => setCurrentPage(svc.page)}
               >
                 <CardContent className="p-3">
                   <div
@@ -335,27 +446,15 @@ export function HomePage() {
                 </div>
               ))
             : [
-                {
-                  bg: "linear-gradient(135deg, #FFC107, #FF8F00)",
-                  label: "Gallery Photo 1",
-                },
-                {
-                  bg: "linear-gradient(135deg, #1a1a2e, #0f3460)",
-                  label: "Gallery Photo 2",
-                },
-                {
-                  bg: "linear-gradient(135deg, #2e7d32, #66bb6a)",
-                  label: "Gallery Photo 3",
-                },
-                {
-                  bg: "linear-gradient(135deg, #1565c0, #42a5f5)",
-                  label: "Gallery Photo 4",
-                },
-              ].map((g) => (
+                ["#FFC107", "#FF8F00"],
+                ["#1a1a2e", "#0f3460"],
+                ["#2e7d32", "#66bb6a"],
+                ["#1565c0", "#42a5f5"],
+              ].map(([a, b]) => (
                 <div
-                  key={g.label}
+                  key={a}
                   className="h-24 rounded-lg flex items-center justify-center"
-                  style={{ background: g.bg }}
+                  style={{ background: `linear-gradient(135deg, ${a}, ${b})` }}
                 >
                   <span className="text-white text-xs font-semibold drop-shadow">
                     Gallery Photo
@@ -367,19 +466,201 @@ export function HomePage() {
           variant="link"
           className="p-0 h-auto text-sm font-semibold mt-2"
           style={{ color: "#FFC107" }}
-          onClick={() => setCurrentPage("gallery")}
+          onClick={() => setCurrentPage("gallery_pub")}
           data-ocid="home.link"
         >
           View Full Gallery →
         </Button>
       </div>
 
+      {/* Our Team Section */}
+      {activeTeam.length > 0 && (
+        <div
+          className="px-4 pb-5 animate-fade-in-up"
+          style={{ animationDelay: "0.22s" }}
+        >
+          <h2 className="font-heading font-bold text-base text-gray-900 mb-1">
+            🌟 Our Team
+          </h2>
+          <p className="text-xs text-gray-500 mb-3">
+            Meet the dedicated people behind our mission
+          </p>
+          <div className="flex gap-3 overflow-x-auto pb-2 snap-x">
+            {activeTeam.map((tm, idx) => (
+              <div
+                key={tm.id}
+                className="snap-start shrink-0 w-40 rounded-2xl overflow-hidden shadow-lg"
+                style={{
+                  border: "2px solid transparent",
+                  background:
+                    "linear-gradient(white, white) padding-box, linear-gradient(135deg, #FFC107, #FF8F00) border-box",
+                }}
+              >
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-3 text-center">
+                  {tm.photo ? (
+                    <img
+                      src={tm.photo}
+                      alt={tm.name}
+                      className="h-14 w-14 rounded-full object-cover mx-auto border-4 border-amber-300 shadow"
+                    />
+                  ) : (
+                    <div
+                      className="h-14 w-14 rounded-full mx-auto flex items-center justify-center text-white text-xl font-bold border-4 border-amber-300 shadow"
+                      style={{
+                        background: AVATAR_COLORS[idx % AVATAR_COLORS.length],
+                      }}
+                    >
+                      {tm.name.charAt(0)}
+                    </div>
+                  )}
+                  <p
+                    className="font-bold text-xs text-gray-900 mt-2 leading-tight"
+                    style={{
+                      fontFamily: "Georgia, serif",
+                      letterSpacing: "0.01em",
+                    }}
+                  >
+                    {tm.name}
+                  </p>
+                  <p
+                    className="text-[10px] font-semibold mt-0.5"
+                    style={{ color: "#FF8F00" }}
+                  >
+                    {tm.designation}
+                  </p>
+                  <p className="text-[10px] text-gray-500 mt-1 italic leading-tight">
+                    "{tm.shortMessage}"
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Button
+            variant="link"
+            className="p-0 h-auto text-sm font-semibold mt-2"
+            style={{ color: "#FFC107" }}
+            onClick={() => setCurrentPage("team")}
+            data-ocid="home.link"
+          >
+            View Full Team →
+          </Button>
+        </div>
+      )}
+
+      {/* Happy Team Reviews */}
+      {activeReviews.length > 0 && (
+        <div
+          className="px-4 pb-5 animate-fade-in-up"
+          style={{ animationDelay: "0.25s" }}
+        >
+          <h2 className="font-heading font-bold text-base text-gray-900 mb-1">
+            💬 Happy Team Reviews
+          </h2>
+          <p className="text-xs text-gray-500 mb-3">
+            What our members say about us
+          </p>
+          <div className="flex gap-3 overflow-x-auto pb-2 snap-x">
+            {activeReviews.map((rev, idx) => (
+              <div
+                key={rev.id}
+                className="snap-start shrink-0 w-52 rounded-2xl p-3 shadow-md"
+                style={{
+                  background: "linear-gradient(135deg, #FFF8E1, #FFF3CD)",
+                  border: "1px solid #FFE082",
+                }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  {rev.photo ? (
+                    <img
+                      src={rev.photo}
+                      alt={rev.memberName}
+                      className="h-10 w-10 rounded-full object-cover border-2 border-amber-300"
+                    />
+                  ) : (
+                    <div
+                      className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold border-2 border-amber-300"
+                      style={{
+                        background: AVATAR_COLORS[idx % AVATAR_COLORS.length],
+                      }}
+                    >
+                      {rev.memberName.charAt(0)}
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-bold text-xs text-gray-900">
+                      {rev.memberName}
+                    </p>
+                    <p className="text-[11px]">{"⭐".repeat(rev.rating)}</p>
+                  </div>
+                </div>
+                <p className="text-[11px] text-gray-700 italic leading-relaxed">
+                  "{rev.message}"
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Best Awards */}
+      {activeAwards.length > 0 && (
+        <div
+          className="px-4 pb-5 animate-fade-in-up"
+          style={{ animationDelay: "0.28s" }}
+        >
+          <h2 className="font-heading font-bold text-base text-gray-900 mb-1">
+            🏆 Best Awards
+          </h2>
+          <p className="text-xs text-gray-500 mb-3">
+            Our achievements and recognitions
+          </p>
+          <div className="flex gap-3 overflow-x-auto pb-2 snap-x">
+            {activeAwards.map((aw, idx) => (
+              <div
+                key={aw.id}
+                className="snap-start shrink-0 w-44 rounded-2xl overflow-hidden shadow-md"
+              >
+                <div
+                  className="p-3 text-center"
+                  style={{
+                    background: "linear-gradient(135deg, #FFC107, #FF8F00)",
+                  }}
+                >
+                  {aw.imageUrl ? (
+                    <img
+                      src={aw.imageUrl}
+                      alt={aw.title}
+                      className="h-12 w-12 object-cover rounded-full mx-auto border-2 border-white"
+                    />
+                  ) : (
+                    <div className="text-3xl">
+                      {["🏆", "🥇", "🌟", "🎖️"][idx % 4]}
+                    </div>
+                  )}
+                  <span className="inline-block bg-white/30 text-gray-900 text-[10px] font-bold px-2 py-0.5 rounded-full mt-1">
+                    {aw.year}
+                  </span>
+                </div>
+                <div className="bg-white p-2">
+                  <p className="font-bold text-xs text-gray-900 leading-tight">
+                    {aw.title}
+                  </p>
+                  <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+                    {aw.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* CTA */}
       <div
         className="mx-4 mb-5 p-5 rounded-xl text-center animate-fade-in-up"
         style={{
           background: "linear-gradient(135deg, #FFC107, #FF8F00)",
-          animationDelay: "0.25s",
+          animationDelay: "0.3s",
         }}
       >
         <h2 className="font-heading font-bold text-lg text-gray-900">
@@ -401,7 +682,7 @@ export function HomePage() {
       {/* Contact Section */}
       <div
         className="px-4 pb-6 animate-fade-in-up"
-        style={{ animationDelay: "0.3s" }}
+        style={{ animationDelay: "0.35s" }}
       >
         <Card className="border-2" style={{ borderColor: "#FFC107" }}>
           <CardContent className="pt-4">

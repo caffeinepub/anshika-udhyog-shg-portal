@@ -16,7 +16,12 @@ import {
   Image,
   LayoutDashboard,
   LogOut,
+  Megaphone,
   Menu,
+  MessageSquare,
+  Settings,
+  ShoppingBag,
+  Star,
   TrendingUp,
   User,
   UserCog,
@@ -25,6 +30,7 @@ import {
   X,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import { TickerBar } from "./TickerBar";
 
 const ADMIN_MENU = [
   { key: "admin_dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -39,6 +45,15 @@ const ADMIN_MENU = [
   { key: "admin_notifications", label: "Notifications", icon: Bell },
   { key: "admin_mlm", label: "Multi-Level Income", icon: TrendingUp },
   { key: "admin_gallery", label: "Gallery", icon: Image },
+  { key: "admin_ticker", label: "Ticker Manager", icon: Megaphone },
+  { key: "admin_shopping", label: "Shopping Manager", icon: ShoppingBag },
+  { key: "admin_vacancies", label: "Vacancy Manager", icon: Briefcase },
+  { key: "admin_pagecontent", label: "Page Content", icon: FileText },
+  { key: "admin_members", label: "Member Manager", icon: Users },
+  { key: "admin_team", label: "Our Team", icon: Star },
+  { key: "admin_reviews", label: "Happy Reviews", icon: MessageSquare },
+  { key: "admin_awards", label: "Awards Manager", icon: Award },
+  { key: "admin_settings", label: "Site Settings", icon: Settings },
 ];
 
 const SHG_MENU = [
@@ -62,6 +77,18 @@ const STAFF_MENU = [
   { key: "staff_salary", label: "Salary Info", icon: DollarSign },
 ];
 
+const FONT_MAP: Record<string, string> = {
+  default: "Inter, system-ui, sans-serif",
+  serif: "Georgia, 'Times New Roman', serif",
+  rounded: "Nunito, system-ui, sans-serif",
+  mono: "'Courier New', Courier, monospace",
+};
+const FONT_SIZE_MAP: Record<string, string> = {
+  small: "14px",
+  medium: "16px",
+  large: "18px",
+};
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const {
     currentUser,
@@ -79,13 +106,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
       : currentUser?.role === "shg"
         ? SHG_MENU
         : STAFF_MENU;
-
   const unreadCount = state.notifications.filter((n) => !n.read).length;
+  const activeTickers = state.tickers.filter((t) => t.active);
+  const logoUrl =
+    state.siteSettings.logoUrl || state.homepageContent.logoUrl || "";
+  const siteTitle =
+    state.siteSettings.siteTitle ||
+    state.homepageContent.siteTitle ||
+    "ANSHIKA UDHYOG";
+  const fontFamily =
+    FONT_MAP[state.siteSettings.fontFamily] || FONT_MAP.default;
+  const fontSize = FONT_SIZE_MAP[state.siteSettings.fontSize] || "16px";
 
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ background: "#F5F5F5" }}
+      style={{ background: "#F5F5F5", fontFamily, fontSize }}
     >
       <header
         className="sticky top-0 z-40 shadow-header"
@@ -97,19 +133,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
             size="icon"
             className="text-gray-900 hover:bg-amber-500 shrink-0"
             onClick={() => setSidebarOpen(true)}
-            data-ocid="nav.toggle"
           >
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <img
-              src="/assets/img-20260315-wa0038-019d4aae-fcb3-75aa-abdd-0170412930a9.jpg"
-              alt="Logo"
-              className="h-8 w-8 rounded-full object-cover border-2 border-white shadow shrink-0"
-            />
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt="Logo"
+                className="h-8 w-8 rounded-full object-cover border-2 border-white shadow shrink-0"
+              />
+            ) : (
+              <img
+                src="/assets/img-20260315-wa0038-019d4aae-fcb3-75aa-abdd-0170412930a9.jpg"
+                alt="Logo"
+                className="h-8 w-8 rounded-full object-cover border-2 border-white shadow shrink-0"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            )}
             <div className="min-w-0">
               <p className="font-heading font-bold text-gray-900 text-xs leading-tight truncate">
-                ANSHIKA UDHYOG
+                {siteTitle}
               </p>
               <p className="text-gray-800 text-[10px] leading-tight truncate">
                 SHG PORTAL
@@ -135,12 +181,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
               size="icon"
               className="text-gray-900 hover:bg-amber-500"
               onClick={logout}
-              data-ocid="nav.link"
             >
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>
+        <TickerBar messages={activeTickers.map((t) => t.message)} />
       </header>
 
       {sidebarOpen && (
@@ -161,14 +207,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
           style={{ background: "#FFC107" }}
         >
           <div className="flex items-center gap-2">
-            <img
-              src="/assets/img-20260315-wa0038-019d4aae-fcb3-75aa-abdd-0170412930a9.jpg"
-              alt="Logo"
-              className="h-10 w-10 rounded-full object-cover border-2 border-white"
-            />
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt="Logo"
+                className="h-10 w-10 rounded-full object-cover border-2 border-white"
+              />
+            ) : (
+              <img
+                src="/assets/img-20260315-wa0038-019d4aae-fcb3-75aa-abdd-0170412930a9.jpg"
+                alt="Logo"
+                className="h-10 w-10 rounded-full object-cover border-2 border-white"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            )}
             <div>
               <p className="font-heading font-bold text-gray-900 text-sm leading-tight">
-                ANSHIKA UDHYOG
+                {siteTitle}
               </p>
               <p className="text-gray-800 text-[11px]">SHG Portal</p>
             </div>
@@ -178,12 +235,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             size="icon"
             className="text-gray-900 hover:bg-amber-500"
             onClick={() => setSidebarOpen(false)}
-            data-ocid="nav.close_button"
           >
             <X className="h-5 w-5" />
           </Button>
         </div>
-
         <div className="px-4 py-3 border-b" style={{ borderColor: "#2d2d4e" }}>
           <p className="text-white font-semibold text-sm">
             {currentUser?.name}
@@ -196,7 +251,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 : "👥 SHG Member"}
           </p>
         </div>
-
         <nav className="flex-1 overflow-y-auto py-2">
           {menu.map((item, idx) => {
             const Icon = item.icon;
@@ -210,11 +264,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   setSidebarOpen(false);
                 }}
                 data-ocid={`nav.link.${idx + 1}`}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
-                  isActive
-                    ? "text-gray-900 font-semibold"
-                    : "text-gray-300 hover:text-white hover:bg-white/10"
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${isActive ? "text-gray-900 font-semibold" : "text-gray-300 hover:text-white hover:bg-white/10"}`}
                 style={isActive ? { background: "#FFC107" } : {}}
               >
                 <Icon className="h-4 w-4 shrink-0" />
@@ -224,13 +274,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-
         <div className="p-4 border-t" style={{ borderColor: "#2d2d4e" }}>
           <Button
             onClick={logout}
             className="w-full text-gray-900 font-semibold"
             style={{ background: "#FFC107" }}
-            data-ocid="nav.link"
           >
             <LogOut className="h-4 w-4 mr-2" /> Logout
           </Button>
@@ -238,7 +286,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       <main className="flex-1 overflow-auto">{children}</main>
-
       <footer className="py-3 px-4 text-center text-xs text-gray-500 bg-white border-t">
         © 2022 Anshika Udhyog SHG Portal. All Rights Reserved.
       </footer>

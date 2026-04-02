@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /user/dashboard
+Disallow: /staff/dashboard
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://anshikaudhyog.in/sitemap.xml

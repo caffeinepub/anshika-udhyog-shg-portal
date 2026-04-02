@@ -86,3 +86,24 @@ body {
   transform: scale(1.05);
   box-shadow: 0 8px 24px rgba(255, 193, 7, 0.25);
 }
+
+/* Ticker scroll animation */
+@keyframes tickerScroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.ticker-inner {
+  display: inline-block;
+  white-space: nowrap;
+  animation: tickerScroll 30s linear infinite;
+}
+
+/* Alternate row colors */
+.table-row-alt:nth-child(even) {
+  background-color: #fffde7;
+}

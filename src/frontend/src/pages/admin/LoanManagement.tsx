@@ -14,19 +14,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle, Search, XCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { CheckCircle, Plus, Search, XCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useApp } from "../../context/AppContext";
 import type { Loan } from "../../types";
 
 export function LoanManagement() {
-  const { state, approveLoan, rejectLoan } = useApp();
+  const { state, approveLoan, rejectLoan, addLoan } = useApp();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [remarks, setRemarks] = useState("");
   const [action, setAction] = useState<"approve" | "reject" | null>(null);
+
+  // Admin direct loan
+  const [directOpen, setDirectOpen] = useState(false);
+  const [directForm, setDirectForm] = useState({
+    shgId: "",
+    amount: "",
+    purpose: "",
+  });
 
   const filtered = state.loans.filter((l) => {
     const matchSearch = l.shgName.toLowerCase().includes(search.toLowerCase());
@@ -48,11 +57,44 @@ export function LoanManagement() {
     setAction(null);
   };
 
+  const handleDirectLoan = () => {
+    if (!directForm.shgId || !directForm.amount || !directForm.purpose) {
+      toast.error("Please fill all fields");
+      return;
+    }
+    const shg = state.shgs.find((s) => s.id === directForm.shgId);
+    if (!shg) return;
+    addLoan({
+      shgId: directForm.shgId,
+      shgName: shg.groupName,
+      amount: Number(directForm.amount),
+      purpose: directForm.purpose,
+      status: "approved",
+      approvedDate: new Date().toISOString().split("T")[0],
+      remarks: "Directly approved by Admin",
+    });
+    toast.success(
+      `Loan of ₹${directForm.amount} directly approved for ${shg.groupName}!`,
+    );
+    setDirectForm({ shgId: "", amount: "", purpose: "" });
+    setDirectOpen(false);
+  };
+
   return (
     <div className="p-4">
-      <h1 className="font-heading font-bold text-xl text-gray-900 mb-4">
-        Loan Management
-      </h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="font-heading font-bold text-xl text-gray-900">
+          Loan Management
+        </h1>
+        <Button
+          onClick={() => setDirectOpen(true)}
+          className="text-gray-900 font-bold text-xs"
+          style={{ background: "#FFC107" }}
+          data-ocid="loan.open_modal_button"
+        >
+          <Plus className="h-4 w-4 mr-1" /> Admin Direct Loan
+        </Button>
+      </div>
 
       <div className="flex gap-2 mb-4">
         <div className="relative flex-1">
@@ -107,22 +149,30 @@ export function LoanManagement() {
               {filtered.map((loan, idx) => (
                 <tr
                   key={loan.id}
-                  className="table-row-alt border-b border-gray-100"
-                  data-ocid={`loan.item.${idx + 1}`}
+                  className="border-b border-gray-100 hover:bg-amber-50"
+                  data-ocid={`loan.row.${idx + 1}`}
                 >
-                  <td className="px-3 py-2 text-gray-500 text-xs">{idx + 1}</td>
-                  <td className="px-3 py-2 font-semibold text-xs text-gray-800">
-                    {loan.shgName}
+                  <td className="px-3 py-2 text-xs text-gray-500">{idx + 1}</td>
+                  <td className="px-3 py-2">
+                    <span className="font-semibold text-xs text-gray-800">
+                      {loan.shgName}
+                    </span>
                   </td>
-                  <td className="px-3 py-2 text-xs font-bold text-green-700">
+                  <td className="px-3 py-2 text-xs font-semibold text-gray-800">
                     ₹{loan.amount.toLocaleString()}
                   </td>
-                  <td className="px-3 py-2 text-xs text-gray-600 hidden sm:table-cell max-w-xs truncate">
-                    {loan.purpose}
+                  <td className="px-3 py-2 text-xs text-gray-600 hidden sm:table-cell">
+                    <span className="line-clamp-1">{loan.purpose}</span>
                   </td>
                   <td className="px-3 py-2">
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold badge-${loan.status}`}
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                        loan.status === "approved"
+                          ? "bg-green-100 text-green-800"
+                          : loan.status === "rejected"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-amber-100 text-amber-800"
+                      }`}
                     >
                       {loan.status.toUpperCase()}
                     </span>
@@ -130,57 +180,63 @@ export function LoanManagement() {
                   <td className="px-3 py-2">
                     {loan.status === "pending" && (
                       <div className="flex gap-1">
-                        <button
-                          type="button"
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-green-600 hover:bg-green-50"
                           onClick={() => {
                             setSelectedLoan(loan);
                             setAction("approve");
                           }}
-                          className="p-1 rounded text-green-600 hover:bg-green-50"
-                          data-ocid={`loan.confirm_button.${idx + 1}`}
+                          data-ocid={`loan.edit_button.${idx + 1}`}
                         >
-                          <CheckCircle className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
+                          <CheckCircle className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-red-600 hover:bg-red-50"
                           onClick={() => {
                             setSelectedLoan(loan);
                             setAction("reject");
                           }}
-                          className="p-1 rounded text-red-500 hover:bg-red-50"
                           data-ocid={`loan.delete_button.${idx + 1}`}
                         >
-                          <XCircle className="h-3.5 w-3.5" />
-                        </button>
+                          <XCircle className="h-4 w-4" />
+                        </Button>
                       </div>
                     )}
                     {loan.status !== "pending" && (
-                      <span className="text-xs text-gray-400">
-                        {loan.approvedDate || "-"}
-                      </span>
+                      <span className="text-xs text-gray-400">—</span>
                     )}
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="text-center py-8 text-gray-400"
+                    data-ocid="loan.empty_state"
+                  >
+                    No loans found
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-        {filtered.length === 0 && (
-          <div
-            className="text-center py-8 text-gray-400"
-            data-ocid="loan.empty_state"
-          >
-            No loans found
-          </div>
-        )}
       </div>
 
-      {/* Confirm dialog */}
+      {/* Approve/Reject Dialog */}
       <Dialog
-        open={!!selectedLoan && !!action}
-        onOpenChange={() => {
-          setSelectedLoan(null);
-          setAction(null);
+        open={!!selectedLoan}
+        onOpenChange={(o) => {
+          if (!o) {
+            setSelectedLoan(null);
+            setRemarks("");
+            setAction(null);
+          }
         }}
       >
         <DialogContent data-ocid="loan.dialog">
@@ -189,53 +245,126 @@ export function LoanManagement() {
               {action === "approve" ? "✅ Approve Loan" : "❌ Reject Loan"}
             </DialogTitle>
           </DialogHeader>
-          {selectedLoan && (
-            <div className="space-y-3">
-              <div className="bg-gray-50 rounded p-3 text-sm">
-                <p>
-                  <strong>SHG:</strong> {selectedLoan.shgName}
-                </p>
-                <p>
-                  <strong>Amount:</strong> ₹
-                  {selectedLoan.amount.toLocaleString()}
-                </p>
-                <p>
-                  <strong>Purpose:</strong> {selectedLoan.purpose}
-                </p>
-              </div>
-              <div>
-                <Label className="text-xs">Remarks (optional)</Label>
-                <Input
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  placeholder="Add remarks..."
-                  data-ocid="loan.input"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleAction}
-                  className="flex-1 font-bold text-white"
-                  style={{
-                    background: action === "approve" ? "#2e7d32" : "#c62828",
-                  }}
-                  data-ocid="loan.confirm_button"
-                >
-                  {action === "approve" ? "Approve" : "Reject"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedLoan(null);
-                    setAction(null);
-                  }}
-                  data-ocid="loan.cancel_button"
-                >
-                  Cancel
-                </Button>
-              </div>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600">
+              SHG: <strong>{selectedLoan?.shgName}</strong> | Amount:{" "}
+              <strong>₹{selectedLoan?.amount?.toLocaleString()}</strong>
+            </p>
+            <div>
+              <Label className="text-xs">Remarks (optional)</Label>
+              <Textarea
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                rows={2}
+                className="mt-1"
+                placeholder="Add remarks..."
+                data-ocid="loan.textarea"
+              />
             </div>
-          )}
+            <div className="flex gap-2">
+              <Button
+                onClick={handleAction}
+                className="flex-1 text-gray-900 font-semibold"
+                style={{
+                  background: action === "approve" ? "#4CAF50" : "#F44336",
+                  color: "white",
+                }}
+                data-ocid="loan.confirm_button"
+              >
+                {action === "approve" ? "✅ Approve" : "❌ Reject"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSelectedLoan(null);
+                  setRemarks("");
+                  setAction(null);
+                }}
+                data-ocid="loan.cancel_button"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Admin Direct Loan Dialog */}
+      <Dialog open={directOpen} onOpenChange={setDirectOpen}>
+        <DialogContent data-ocid="loan.dialog">
+          <DialogHeader>
+            <DialogTitle>💰 Admin Direct Loan Approval</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-xs text-gray-500">
+              Admin सीधे किसी SHG को loan approve कर सकते हैं।
+            </p>
+            <div>
+              <Label className="text-xs">Select SHG *</Label>
+              <Select
+                value={directForm.shgId}
+                onValueChange={(v) =>
+                  setDirectForm((p) => ({ ...p, shgId: v }))
+                }
+              >
+                <SelectTrigger className="mt-1" data-ocid="loan.select">
+                  <SelectValue placeholder="Select SHG..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {state.shgs
+                    .filter((s) => s.status === "approved")
+                    .map((shg) => (
+                      <SelectItem key={shg.id} value={shg.id}>
+                        {shg.groupName} - {shg.leaderName}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Loan Amount (₹) *</Label>
+              <Input
+                type="number"
+                value={directForm.amount}
+                onChange={(e) =>
+                  setDirectForm((p) => ({ ...p, amount: e.target.value }))
+                }
+                placeholder="e.g. 50000"
+                className="mt-1"
+                data-ocid="loan.input"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Purpose *</Label>
+              <Textarea
+                value={directForm.purpose}
+                onChange={(e) =>
+                  setDirectForm((p) => ({ ...p, purpose: e.target.value }))
+                }
+                rows={2}
+                placeholder="Loan purpose..."
+                className="mt-1"
+                data-ocid="loan.textarea"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleDirectLoan}
+                className="flex-1 text-gray-900 font-semibold"
+                style={{ background: "#FFC107" }}
+                data-ocid="loan.confirm_button"
+              >
+                ✅ Create & Approve Loan
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setDirectOpen(false)}
+                data-ocid="loan.cancel_button"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

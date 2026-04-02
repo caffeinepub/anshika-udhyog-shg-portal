@@ -3,16 +3,25 @@ import { createContext, useCallback, useContext, useState } from "react";
 import { initialState } from "../data/seedData";
 import type {
   AppState,
+  Award,
   Branch,
   CurrentUser,
   GalleryItem,
   HomepageContent,
   Loan,
+  Member,
   Notification,
+  PageContent,
+  Product,
   Reward,
   SHG,
+  SiteSettings,
   Staff,
+  TeamMember,
+  TeamReview,
+  TickerItem,
   Training,
+  Vacancy,
   WalletTransaction,
 } from "../types";
 
@@ -21,6 +30,8 @@ interface AppContextType {
   currentUser: CurrentUser | null;
   currentPage: string;
   sidebarOpen: boolean;
+  language: "en" | "hi";
+  setLanguage: (lang: "en" | "hi") => void;
   setCurrentPage: (page: string) => void;
   setSidebarOpen: (open: boolean) => void;
   login: (
@@ -59,6 +70,29 @@ interface AppContextType {
   updateHomepageContent: (content: HomepageContent) => void;
   addGalleryItem: (item: Omit<GalleryItem, "id">) => void;
   deleteGalleryItem: (id: string) => void;
+  addTicker: (ticker: Omit<TickerItem, "id">) => void;
+  updateTicker: (ticker: TickerItem) => void;
+  deleteTicker: (id: string) => void;
+  addProduct: (product: Omit<Product, "id">) => void;
+  updateProduct: (product: Product) => void;
+  deleteProduct: (id: string) => void;
+  addVacancy: (vacancy: Omit<Vacancy, "id">) => void;
+  updateVacancy: (vacancy: Vacancy) => void;
+  deleteVacancy: (id: string) => void;
+  updatePageContent: (page: string, content: string) => void;
+  updateSiteSettings: (settings: SiteSettings) => void;
+  addMember: (m: Omit<Member, "id">) => void;
+  updateMember: (m: Member) => void;
+  deleteMember: (id: string) => void;
+  addTeamMember: (m: Omit<TeamMember, "id">) => void;
+  updateTeamMember: (m: TeamMember) => void;
+  deleteTeamMember: (id: string) => void;
+  addTeamReview: (r: Omit<TeamReview, "id">) => void;
+  updateTeamReview: (r: TeamReview) => void;
+  deleteTeamReview: (id: string) => void;
+  addAward: (a: Omit<Award, "id">) => void;
+  updateAward: (a: Award) => void;
+  deleteAward: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -68,6 +102,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [currentPage, setCurrentPage] = useState("home");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [language, setLanguage] = useState<"en" | "hi">("en");
 
   const login = useCallback(
     (
@@ -142,7 +177,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ),
     }));
   }, []);
-
   const rejectSHG = useCallback((id: string) => {
     setState((prev) => ({
       ...prev,
@@ -151,26 +185,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ),
     }));
   }, []);
-
   const addSHG = useCallback((shg: Omit<SHG, "id">) => {
-    const newSHG: SHG = { ...shg, id: `shg${Date.now()}` };
-    setState((prev) => ({ ...prev, shgs: [...prev.shgs, newSHG] }));
+    setState((prev) => ({
+      ...prev,
+      shgs: [...prev.shgs, { ...shg, id: `shg${Date.now()}` }],
+    }));
   }, []);
-
-  const updateSHG = useCallback(
-    (shg: SHG) => {
-      setState((prev) => ({
-        ...prev,
-        shgs: prev.shgs.map((s) => (s.id === shg.id ? shg : s)),
-      }));
-      if (currentUser?.role === "shg" && currentUser.id === shg.id) {
-        setCurrentUser((prev) =>
-          prev ? { ...prev, data: shg, name: shg.groupName } : prev,
-        );
-      }
-    },
-    [currentUser],
-  );
+  const updateSHG = useCallback((shg: SHG) => {
+    setState((prev) => ({
+      ...prev,
+      shgs: prev.shgs.map((s) => (s.id === shg.id ? shg : s)),
+    }));
+  }, []);
 
   const approveLoan = useCallback((id: string, remarks?: string) => {
     setState((prev) => ({
@@ -187,7 +213,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ),
     }));
   }, []);
-
   const rejectLoan = useCallback((id: string, remarks?: string) => {
     setState((prev) => ({
       ...prev,
@@ -196,43 +221,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ),
     }));
   }, []);
-
   const addLoan = useCallback((loan: Omit<Loan, "id" | "appliedDate">) => {
-    const newLoan = {
-      ...loan,
-      id: `l${Date.now()}`,
-      appliedDate: new Date().toISOString().split("T")[0],
-    };
-    setState((prev) => ({ ...prev, loans: [...prev.loans, newLoan] }));
+    setState((prev) => ({
+      ...prev,
+      loans: [
+        ...prev.loans,
+        {
+          ...loan,
+          id: `l${Date.now()}`,
+          appliedDate: new Date().toISOString().split("T")[0],
+        },
+      ],
+    }));
   }, []);
 
   const addTraining = useCallback(
     (t: Omit<Training, "id" | "enrolledSHGs" | "completedSHGs">) => {
-      const newT: Training = {
-        ...t,
-        id: `t${Date.now()}`,
-        enrolledSHGs: [],
-        completedSHGs: [],
-      };
-      setState((prev) => ({ ...prev, trainings: [...prev.trainings, newT] }));
+      setState((prev) => ({
+        ...prev,
+        trainings: [
+          ...prev.trainings,
+          { ...t, id: `t${Date.now()}`, enrolledSHGs: [], completedSHGs: [] },
+        ],
+      }));
     },
     [],
   );
-
   const updateTraining = useCallback((t: Training) => {
     setState((prev) => ({
       ...prev,
       trainings: prev.trainings.map((tr) => (tr.id === t.id ? t : tr)),
     }));
   }, []);
-
   const deleteTraining = useCallback((id: string) => {
     setState((prev) => ({
       ...prev,
       trainings: prev.trainings.filter((t) => t.id !== id),
     }));
   }, []);
-
   const enrollTraining = useCallback((trainingId: string, shgId: string) => {
     setState((prev) => ({
       ...prev,
@@ -243,7 +269,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ),
     }));
   }, []);
-
   const completeTraining = useCallback((trainingId: string, shgId: string) => {
     setState((prev) => ({
       ...prev,
@@ -256,17 +281,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addStaff = useCallback((s: Omit<Staff, "id">) => {
-    const newS: Staff = { ...s, id: `s${Date.now()}` };
-    setState((prev) => ({ ...prev, staff: [...prev.staff, newS] }));
+    setState((prev) => ({
+      ...prev,
+      staff: [...prev.staff, { ...s, id: `s${Date.now()}` }],
+    }));
   }, []);
-
   const updateStaff = useCallback((s: Staff) => {
     setState((prev) => ({
       ...prev,
       staff: prev.staff.map((st) => (st.id === s.id ? s : st)),
     }));
   }, []);
-
   const deleteStaff = useCallback((id: string) => {
     setState((prev) => ({
       ...prev,
@@ -275,17 +300,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addBranch = useCallback((b: Omit<Branch, "id">) => {
-    const newB: Branch = { ...b, id: `b${Date.now()}` };
-    setState((prev) => ({ ...prev, branches: [...prev.branches, newB] }));
+    setState((prev) => ({
+      ...prev,
+      branches: [...prev.branches, { ...b, id: `b${Date.now()}` }],
+    }));
   }, []);
-
   const updateBranch = useCallback((b: Branch) => {
     setState((prev) => ({
       ...prev,
       branches: prev.branches.map((br) => (br.id === b.id ? b : br)),
     }));
   }, []);
-
   const deleteBranch = useCallback((id: string) => {
     setState((prev) => ({
       ...prev,
@@ -294,12 +319,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addReward = useCallback((r: Omit<Reward, "id" | "announcedDate">) => {
-    const newR: Reward = {
-      ...r,
-      id: `r${Date.now()}`,
-      announcedDate: new Date().toISOString().split("T")[0],
-    };
-    setState((prev) => ({ ...prev, rewards: [...prev.rewards, newR] }));
+    setState((prev) => ({
+      ...prev,
+      rewards: [
+        ...prev.rewards,
+        {
+          ...r,
+          id: `r${Date.now()}`,
+          announcedDate: new Date().toISOString().split("T")[0],
+        },
+      ],
+    }));
   }, []);
 
   const creditWallet = useCallback(
@@ -308,21 +338,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const shg = prev.shgs.find((s) => s.id === shgId);
         if (!shg) return prev;
         const newBalance = shg.walletBalance + amount;
-        const tx: WalletTransaction = {
-          id: `wt${Date.now()}`,
-          shgId,
-          type: "credit",
-          amount,
-          description: desc,
-          date: new Date().toISOString().split("T")[0],
-          balance: newBalance,
-        };
         return {
           ...prev,
           shgs: prev.shgs.map((s) =>
             s.id === shgId ? { ...s, walletBalance: newBalance } : s,
           ),
-          walletTransactions: [...prev.walletTransactions, tx],
+          walletTransactions: [
+            ...prev.walletTransactions,
+            {
+              id: `wt${Date.now()}`,
+              shgId,
+              type: "credit",
+              amount,
+              description: desc,
+              date: new Date().toISOString().split("T")[0],
+              balance: newBalance,
+            },
+          ],
         };
       });
     },
@@ -335,21 +367,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const shg = prev.shgs.find((s) => s.id === shgId);
         if (!shg || shg.walletBalance < amount) return prev;
         const newBalance = shg.walletBalance - amount;
-        const tx: WalletTransaction = {
-          id: `wt${Date.now()}`,
-          shgId,
-          type: "debit",
-          amount,
-          description: desc,
-          date: new Date().toISOString().split("T")[0],
-          balance: newBalance,
-        };
         return {
           ...prev,
           shgs: prev.shgs.map((s) =>
             s.id === shgId ? { ...s, walletBalance: newBalance } : s,
           ),
-          walletTransactions: [...prev.walletTransactions, tx],
+          walletTransactions: [
+            ...prev.walletTransactions,
+            {
+              id: `wt${Date.now()}`,
+              shgId,
+              type: "debit",
+              amount,
+              description: desc,
+              date: new Date().toISOString().split("T")[0],
+              balance: newBalance,
+            },
+          ],
         };
       });
     },
@@ -358,20 +392,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const sendNotification = useCallback(
     (n: Omit<Notification, "id" | "date" | "read">) => {
-      const newN: Notification = {
-        ...n,
-        id: `n${Date.now()}`,
-        date: new Date().toISOString().split("T")[0],
-        read: false,
-      };
       setState((prev) => ({
         ...prev,
-        notifications: [newN, ...prev.notifications],
+        notifications: [
+          {
+            ...n,
+            id: `n${Date.now()}`,
+            date: new Date().toISOString().split("T")[0],
+            read: false,
+          },
+          ...prev.notifications,
+        ],
       }));
     },
     [],
   );
-
   const markNotificationRead = useCallback((id: string) => {
     setState((prev) => ({
       ...prev,
@@ -380,41 +415,191 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ),
     }));
   }, []);
-
   const updateMLMCommission = useCallback(
     (level: number, commission: number) => {
       setState((prev) => ({
         ...prev,
-        mlmLevels: prev.mlmLevels.map((m) =>
-          m.level === level ? { ...m, commission } : m,
+        mlmLevels: prev.mlmLevels.map((l) =>
+          l.level === level ? { ...l, commission } : l,
         ),
       }));
     },
     [],
   );
-
   const luckyDraw = useCallback((): string | null => {
-    const eligible = state.shgs.filter((s) => s.status === "approved");
-    if (!eligible.length) return null;
-    return eligible[Math.floor(Math.random() * eligible.length)].id;
+    const approved = state.shgs.filter((s) => s.status === "approved");
+    if (approved.length === 0) return null;
+    return approved[Math.floor(Math.random() * approved.length)].groupName;
   }, [state.shgs]);
 
   const updateHomepageContent = useCallback((content: HomepageContent) => {
     setState((prev) => ({ ...prev, homepageContent: content }));
   }, []);
-
   const addGalleryItem = useCallback((item: Omit<GalleryItem, "id">) => {
-    const newItem: GalleryItem = { ...item, id: `g${Date.now()}` };
     setState((prev) => ({
       ...prev,
-      galleryItems: [...prev.galleryItems, newItem],
+      galleryItems: [...prev.galleryItems, { ...item, id: `g${Date.now()}` }],
     }));
   }, []);
-
   const deleteGalleryItem = useCallback((id: string) => {
     setState((prev) => ({
       ...prev,
       galleryItems: prev.galleryItems.filter((g) => g.id !== id),
+    }));
+  }, []);
+
+  const addTicker = useCallback((ticker: Omit<TickerItem, "id">) => {
+    setState((prev) => ({
+      ...prev,
+      tickers: [...prev.tickers, { ...ticker, id: `tk${Date.now()}` }],
+    }));
+  }, []);
+  const updateTicker = useCallback((ticker: TickerItem) => {
+    setState((prev) => ({
+      ...prev,
+      tickers: prev.tickers.map((t) => (t.id === ticker.id ? ticker : t)),
+    }));
+  }, []);
+  const deleteTicker = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      tickers: prev.tickers.filter((t) => t.id !== id),
+    }));
+  }, []);
+
+  const addProduct = useCallback((product: Omit<Product, "id">) => {
+    setState((prev) => ({
+      ...prev,
+      products: [...prev.products, { ...product, id: `p${Date.now()}` }],
+    }));
+  }, []);
+  const updateProduct = useCallback((product: Product) => {
+    setState((prev) => ({
+      ...prev,
+      products: prev.products.map((p) => (p.id === product.id ? product : p)),
+    }));
+  }, []);
+  const deleteProduct = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      products: prev.products.filter((p) => p.id !== id),
+    }));
+  }, []);
+
+  const addVacancy = useCallback((vacancy: Omit<Vacancy, "id">) => {
+    setState((prev) => ({
+      ...prev,
+      vacancies: [...prev.vacancies, { ...vacancy, id: `v${Date.now()}` }],
+    }));
+  }, []);
+  const updateVacancy = useCallback((vacancy: Vacancy) => {
+    setState((prev) => ({
+      ...prev,
+      vacancies: prev.vacancies.map((v) => (v.id === vacancy.id ? vacancy : v)),
+    }));
+  }, []);
+  const deleteVacancy = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      vacancies: prev.vacancies.filter((v) => v.id !== id),
+    }));
+  }, []);
+
+  const updatePageContent = useCallback((page: string, content: string) => {
+    setState((prev) => ({
+      ...prev,
+      pageContents: prev.pageContents.map((pc) =>
+        pc.page === page
+          ? {
+              ...pc,
+              content,
+              updatedAt: new Date().toISOString().split("T")[0],
+            }
+          : pc,
+      ),
+    }));
+  }, []);
+  const updateSiteSettings = useCallback((settings: SiteSettings) => {
+    setState((prev) => ({ ...prev, siteSettings: settings }));
+  }, []);
+
+  // Member CRUD
+  const addMember = useCallback((m: Omit<Member, "id">) => {
+    setState((prev) => ({
+      ...prev,
+      members: [...prev.members, { ...m, id: `m${Date.now()}` }],
+    }));
+  }, []);
+  const updateMember = useCallback((m: Member) => {
+    setState((prev) => ({
+      ...prev,
+      members: prev.members.map((x) => (x.id === m.id ? m : x)),
+    }));
+  }, []);
+  const deleteMember = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      members: prev.members.filter((m) => m.id !== id),
+    }));
+  }, []);
+
+  // TeamMember CRUD
+  const addTeamMember = useCallback((m: Omit<TeamMember, "id">) => {
+    setState((prev) => ({
+      ...prev,
+      teamMembers: [...prev.teamMembers, { ...m, id: `tm${Date.now()}` }],
+    }));
+  }, []);
+  const updateTeamMember = useCallback((m: TeamMember) => {
+    setState((prev) => ({
+      ...prev,
+      teamMembers: prev.teamMembers.map((x) => (x.id === m.id ? m : x)),
+    }));
+  }, []);
+  const deleteTeamMember = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      teamMembers: prev.teamMembers.filter((m) => m.id !== id),
+    }));
+  }, []);
+
+  // TeamReview CRUD
+  const addTeamReview = useCallback((r: Omit<TeamReview, "id">) => {
+    setState((prev) => ({
+      ...prev,
+      teamReviews: [...prev.teamReviews, { ...r, id: `tr${Date.now()}` }],
+    }));
+  }, []);
+  const updateTeamReview = useCallback((r: TeamReview) => {
+    setState((prev) => ({
+      ...prev,
+      teamReviews: prev.teamReviews.map((x) => (x.id === r.id ? r : x)),
+    }));
+  }, []);
+  const deleteTeamReview = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      teamReviews: prev.teamReviews.filter((r) => r.id !== id),
+    }));
+  }, []);
+
+  // Award CRUD
+  const addAward = useCallback((a: Omit<Award, "id">) => {
+    setState((prev) => ({
+      ...prev,
+      awards: [...prev.awards, { ...a, id: `aw${Date.now()}` }],
+    }));
+  }, []);
+  const updateAward = useCallback((a: Award) => {
+    setState((prev) => ({
+      ...prev,
+      awards: prev.awards.map((x) => (x.id === a.id ? a : x)),
+    }));
+  }, []);
+  const deleteAward = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      awards: prev.awards.filter((a) => a.id !== id),
     }));
   }, []);
 
@@ -425,6 +610,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         currentUser,
         currentPage,
         sidebarOpen,
+        language,
+        setLanguage,
         setCurrentPage,
         setSidebarOpen,
         login,
@@ -457,6 +644,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         updateHomepageContent,
         addGalleryItem,
         deleteGalleryItem,
+        addTicker,
+        updateTicker,
+        deleteTicker,
+        addProduct,
+        updateProduct,
+        deleteProduct,
+        addVacancy,
+        updateVacancy,
+        deleteVacancy,
+        updatePageContent,
+        updateSiteSettings,
+        addMember,
+        updateMember,
+        deleteMember,
+        addTeamMember,
+        updateTeamMember,
+        deleteTeamMember,
+        addTeamReview,
+        updateTeamReview,
+        deleteTeamReview,
+        addAward,
+        updateAward,
+        deleteAward,
       }}
     >
       {children}
@@ -466,6 +676,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
 export function useApp() {
   const ctx = useContext(AppContext);
-  if (!ctx) throw new Error("useApp must be used inside AppProvider");
+  if (!ctx) throw new Error("useApp must be used within AppProvider");
   return ctx;
 }
