@@ -426,4 +426,70 @@ export const initialState: AppState = {
     { level: 2, commission: 5, members: ["shg3", "shg5", "shg7"] },
     { level: 3, commission: 2, members: ["shg6", "shg8"] },
   ],
+  homepageContent: {
+    slides: [
+      {
+        bg: "linear-gradient(135deg, #FFC107 0%, #FF8F00 100%)",
+        title: "महिला सशक्तिकरण",
+        subtitle: "Women Empowerment Through Self Help Groups",
+      },
+      {
+        bg: "linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%)",
+        title: "आर्थिक स्वतंत्रता",
+        subtitle: "Financial Independence for Every Woman",
+      },
+      {
+        bg: "linear-gradient(135deg, #2e7d32 0%, #43a047 60%, #66bb6a 100%)",
+        title: "ऋण सेवाएं",
+        subtitle: "Easy Loan Services for SHG Members",
+      },
+      {
+        bg: "linear-gradient(135deg, #1565c0 0%, #1e88e5 60%, #42a5f5 100%)",
+        title: "प्रशिक्षण कार्यक्रम",
+        subtitle: "Skill Development & Training Programs",
+      },
+    ],
+    aboutText:
+      "अंशिका उद्योग SHG पोर्टल महिला स्व-सहायता समूहों के लिए एक डिजिटल मंच है। हम महिलाओं को आर्थिक स्वतंत्रता और सशक्तिकरण प्रदान करते हैं।",
+    tagline: "ANSHIKA UDHYOG SHG PORTAL",
+    stats: [
+      { value: "500+", label: "SHG Members", icon: "👥" },
+      { value: "50+", label: "Branches", icon: "🏢" },
+      { value: "₹10 Cr+", label: "Loans Disbursed", icon: "💰" },
+      { value: "1000+", label: "Women Empowered", icon: "👩" },
+    ],
+    phone: "+91 XXXXX XXXXX",
+    email: "info@anshikaudhyog.org",
+    address: "Anshika Udhyog Head Office, Uttar Pradesh, India",
+  },
+  galleryItems: [
+    {
+      id: "g1",
+      title: "Silai Training Program",
+      date: "2024-03-10",
+      type: "photo",
+      src: "",
+    },
+    {
+      id: "g2",
+      title: "Lucky Draw Ceremony",
+      date: "2024-03-15",
+      type: "photo",
+      src: "",
+    },
+    {
+      id: "g3",
+      title: "SHG Meeting Delhi",
+      date: "2024-03-20",
+      type: "photo",
+      src: "",
+    },
+    {
+      id: "g4",
+      title: "Annual Award Function",
+      date: "2024-04-10",
+      type: "photo",
+      src: "",
+    },
+  ],
 };

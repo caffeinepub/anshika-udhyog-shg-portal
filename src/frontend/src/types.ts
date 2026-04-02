@@ -109,6 +109,36 @@ export interface CurrentUser {
   data: SHG | Staff | null;
 }
 
+export interface HomepageSlide {
+  title: string;
+  subtitle: string;
+  bg: string;
+}
+
+export interface HomepageStat {
+  value: string;
+  label: string;
+  icon: string;
+}
+
+export interface HomepageContent {
+  slides: HomepageSlide[];
+  aboutText: string;
+  tagline: string;
+  stats: HomepageStat[];
+  phone: string;
+  email: string;
+  address: string;
+}
+
+export interface GalleryItem {
+  id: string;
+  title: string;
+  date: string;
+  type: "photo" | "video";
+  src: string;
+}
+
 export interface AppState {
   shgs: SHG[];
   staff: Staff[];
@@ -119,4 +149,6 @@ export interface AppState {
   walletTransactions: WalletTransaction[];
   notifications: Notification[];
   mlmLevels: MLMLevel[];
+  homepageContent: HomepageContent;
+  galleryItems: GalleryItem[];
 }

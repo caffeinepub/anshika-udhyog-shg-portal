@@ -5,6 +5,8 @@ import type {
   AppState,
   Branch,
   CurrentUser,
+  GalleryItem,
+  HomepageContent,
   Loan,
   Notification,
   Reward,
@@ -54,6 +56,9 @@ interface AppContextType {
   markNotificationRead: (id: string) => void;
   updateMLMCommission: (level: number, commission: number) => void;
   luckyDraw: () => string | null;
+  updateHomepageContent: (content: HomepageContent) => void;
+  addGalleryItem: (item: Omit<GalleryItem, "id">) => void;
+  deleteGalleryItem: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -394,6 +399,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return eligible[Math.floor(Math.random() * eligible.length)].id;
   }, [state.shgs]);
 
+  const updateHomepageContent = useCallback((content: HomepageContent) => {
+    setState((prev) => ({ ...prev, homepageContent: content }));
+  }, []);
+
+  const addGalleryItem = useCallback((item: Omit<GalleryItem, "id">) => {
+    const newItem: GalleryItem = { ...item, id: `g${Date.now()}` };
+    setState((prev) => ({
+      ...prev,
+      galleryItems: [...prev.galleryItems, newItem],
+    }));
+  }, []);
+
+  const deleteGalleryItem = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      galleryItems: prev.galleryItems.filter((g) => g.id !== id),
+    }));
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -430,6 +454,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         markNotificationRead,
         updateMLMCommission,
         luckyDraw,
+        updateHomepageContent,
+        addGalleryItem,
+        deleteGalleryItem,
       }}
     >
       {children}

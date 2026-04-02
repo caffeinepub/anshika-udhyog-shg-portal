@@ -10,6 +10,7 @@ import { ServicesPage } from "./pages/ServicesPage";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { BranchManagement } from "./pages/admin/BranchManagement";
 import { Gallery } from "./pages/admin/Gallery";
+import { HomepageEditor } from "./pages/admin/HomepageEditor";
 import { LoanManagement } from "./pages/admin/LoanManagement";
 import { MLMIncome } from "./pages/admin/MLMIncome";
 import { NotificationsAdmin } from "./pages/admin/NotificationsAdmin";
@@ -46,7 +47,6 @@ const PUBLIC_PAGES = new Set([
 function AppRouter() {
   const { currentPage, currentUser } = useApp();
 
-  // Public pages - shown without login
   if (!currentUser || PUBLIC_PAGES.has(currentPage)) {
     if (currentPage === "login") {
       return (
@@ -67,8 +67,8 @@ function AppRouter() {
   }
 
   const pageMap: Record<string, React.ReactNode> = {
-    // Admin pages
     admin_dashboard: <AdminDashboard />,
+    admin_homepage: <HomepageEditor />,
     admin_shg: <SHGManagement />,
     admin_loans: <LoanManagement />,
     admin_training: <TrainingManagement />,
@@ -79,7 +79,6 @@ function AppRouter() {
     admin_notifications: <NotificationsAdmin />,
     admin_mlm: <MLMIncome />,
     admin_gallery: <Gallery />,
-    // SHG pages
     shg_dashboard: <SHGDashboard />,
     shg_profile: <SHGProfile />,
     shg_apply_loan: <LoanApply />,
@@ -90,7 +89,6 @@ function AppRouter() {
     shg_wallet: <WalletPage />,
     shg_idcard: <IDCard />,
     shg_notifications: <SHGNotifications />,
-    // Staff pages
     staff_dashboard: <StaffDashboard />,
     staff_profile: <StaffProfile />,
     staff_shgs: <AssignedSHGs />,
@@ -100,7 +98,6 @@ function AppRouter() {
 
   const content =
     pageMap[currentPage] || pageMap[`${currentUser.role}_dashboard`];
-
   return <Layout>{content}</Layout>;
 }
 

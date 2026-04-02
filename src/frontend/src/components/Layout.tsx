@@ -11,6 +11,7 @@ import {
   DollarSign,
   FileText,
   Gift,
+  Globe,
   Home,
   Image,
   LayoutDashboard,
@@ -27,6 +28,7 @@ import { useApp } from "../context/AppContext";
 
 const ADMIN_MENU = [
   { key: "admin_dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { key: "admin_homepage", label: "Homepage Editor", icon: Globe },
   { key: "admin_shg", label: "SHG Management", icon: Users },
   { key: "admin_loans", label: "Loan Management", icon: CreditCard },
   { key: "admin_training", label: "Training Programs", icon: BookOpen },
@@ -208,7 +210,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   setSidebarOpen(false);
                 }}
                 data-ocid={`nav.link.${idx + 1}`}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${isActive ? "text-gray-900 font-semibold" : "text-gray-300 hover:text-white hover:bg-white/10"}`}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                  isActive
+                    ? "text-gray-900 font-semibold"
+                    : "text-gray-300 hover:text-white hover:bg-white/10"
+                }`}
                 style={isActive ? { background: "#FFC107" } : {}}
               >
                 <Icon className="h-4 w-4 shrink-0" />
@@ -234,16 +240,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 overflow-auto">{children}</main>
 
       <footer className="py-3 px-4 text-center text-xs text-gray-500 bg-white border-t">
-        © {new Date().getFullYear()} Anshika Udhyog SHG Portal. Built with ❤️
-        using{" "}
-        <a
-          href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline"
-        >
-          caffeine.ai
-        </a>
+        © 2022 Anshika Udhyog SHG Portal. All Rights Reserved.
       </footer>
     </div>
   );
